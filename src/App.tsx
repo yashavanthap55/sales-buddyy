@@ -17,6 +17,7 @@ import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import LeadsManagement from "./pages/LeadsManagement";
 import LeadChat from "./pages/LeadChat";
+import Chatbot from "./pages/Chatbot";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="demo-delivery" element={<DemoDelivery />} />
               <Route path="quotation" element={<Quotation />} />
               <Route path="analytics" element={<Analytics />} />
+              <Route path="chatbot" element={<Chatbot />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

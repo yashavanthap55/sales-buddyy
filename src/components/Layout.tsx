@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +12,8 @@ import {
   Menu,
   X,
   LogOut,
-  MessageSquare
+  MessageSquare,
+  Bot
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ const Layout = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
+    { name: 'AI Assistant', href: '/chatbot', icon: Bot },
     { name: 'Leads', href: '/leads', icon: MessageSquare },
     { name: 'Company Setup', href: '/company-setup', icon: Building2 },
     { name: 'Lead Qualification', href: '/lead-qualification', icon: Users },
