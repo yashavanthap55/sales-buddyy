@@ -13,7 +13,9 @@ import {
   TrendingUp, 
   MessageCircle,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Building2,
+  BarChart3
 } from 'lucide-react';
 
 const Dashboard = () => {
