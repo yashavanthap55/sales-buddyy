@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Home, 
   Building2, 
@@ -10,15 +11,20 @@ import {
   FileText, 
   BarChart3,
   Menu,
-  X
+  X,
+  LogOut,
+  MessageSquare
 } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
+    { name: 'Leads', href: '/leads', icon: MessageSquare },
     { name: 'Company Setup', href: '/company-setup', icon: Building2 },
     { name: 'Lead Qualification', href: '/lead-qualification', icon: Users },
     { name: 'Lead Scoring', href: '/lead-scoring', icon: Target },
@@ -53,7 +59,7 @@ const Layout = () => {
           </button>
         </div>
         
-        <nav className="mt-6 px-3">
+        <nav className="mt-6 px-3 flex-1">
           {navigation.map((item) => (
             <NavLink
               key={item.name}
@@ -71,6 +77,30 @@ const Layout = () => {
             </NavLink>
           ))}
         </nav>
+
+        {/* User section */}
+        <div className="p-4 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-medium">
+                  {user?.email?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-700">{user?.email}</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={signOut}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Main content */}

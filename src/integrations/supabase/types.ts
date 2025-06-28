@@ -9,7 +9,189 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          lead_id: string
+          message: string
+          message_type: string | null
+          sender: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead_id: string
+          message: string
+          message_type?: string | null
+          sender: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead_id?: string
+          message?: string
+          message_type?: string | null
+          sender?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          data: Json | null
+          description: string | null
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          data?: Json | null
+          description?: string | null
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          data?: Json | null
+          description?: string | null
+          id?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_scores: {
+        Row: {
+          authority_score: number | null
+          budget_score: number | null
+          created_at: string
+          id: string
+          lead_id: string
+          need_score: number | null
+          timeline_score: number | null
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          authority_score?: number | null
+          budget_score?: number | null
+          created_at?: string
+          id?: string
+          lead_id: string
+          need_score?: number | null
+          timeline_score?: number | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          authority_score?: number | null
+          budget_score?: number | null
+          created_at?: string
+          id?: string
+          lead_id?: string
+          need_score?: number | null
+          timeline_score?: number | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_scores_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string | null
+          id: string
+          lead_type: string | null
+          name: string
+          phone: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          lead_type?: string | null
+          name: string
+          phone?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          lead_type?: string | null
+          name?: string
+          phone?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
