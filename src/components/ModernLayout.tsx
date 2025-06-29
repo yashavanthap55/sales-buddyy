@@ -16,7 +16,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 
 const ModernLayout = () => {
   const [sidebarHovered, setSidebarHovered] = useState(false);
@@ -33,16 +32,6 @@ const ModernLayout = () => {
     { name: 'Quotation', href: '/quotation', icon: FileText },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   ];
-
-  // Mock leads data for progress display
-  const mockLeads = [
-    { id: 1, name: 'Acme Corp', progress: 83, currentStep: 5 },
-    { id: 2, name: 'TechStart Inc', progress: 50, currentStep: 3 },
-    { id: 3, name: 'Global Solutions', progress: 33, currentStep: 2 },
-    { id: 4, name: 'Innovation Hub', progress: 16, currentStep: 1 },
-  ];
-
-  const processSteps = ['Initial', 'Qualified', 'Demo', 'Proposal', 'Negotiation', 'Closed'];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
@@ -92,25 +81,6 @@ const ModernLayout = () => {
             </NavLink>
           ))}
         </nav>
-
-        {/* Leads Progress Section */}
-        <div className={`px-2 py-4 border-t border-gray-200/50 transition-all duration-300 ${sidebarHovered ? 'opacity-100' : 'opacity-0'}`}>
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Active Leads</h3>
-          <div className="space-y-3 max-h-48 overflow-y-auto">
-            {mockLeads.map((lead) => (
-              <div key={lead.id} className="bg-gray-50/50 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-900 truncate">{lead.name}</span>
-                  <span className="text-xs text-gray-500">{lead.currentStep}/6</span>
-                </div>
-                <Progress value={lead.progress} className="h-2 mb-1" />
-                <div className="text-xs text-gray-500">
-                  Step: {processSteps[lead.currentStep - 1]}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* User section */}
         <div className="p-4 border-t border-gray-200/50">

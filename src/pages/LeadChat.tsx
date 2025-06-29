@@ -7,11 +7,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Send, User, Bot, Target, DollarSign, Clock, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import LeadProgress from '@/components/LeadProgress';
 
 const LeadChat = () => {
   const { leadId } = useParams<{ leadId: string }>();
@@ -167,6 +167,16 @@ const LeadChat = () => {
 
   const totalScore = (scores.budget_score + scores.authority_score + scores.need_score + scores.timeline_score) / 4;
 
+  // Calculate current step and progress for this lead
+  const getCurrentStep = () => {
+    if (totalScore >= 80) return 6; // Closed
+    if (totalScore >= 65) return 5; // Negotiation
+    if (totalScore >= 50) return 4; // Proposal
+    if (totalScore >= 35) return 3; // Demo
+    if (totalScore >= 20) return 2; // Qualified
+    return 1; // Initial
+  };
+
   if (leadLoading) {
     return <div className="p-6">Loading lead details...</div>;
   }
@@ -203,7 +213,7 @@ const LeadChat = () => {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Chat Section */}
         <div className="lg:col-span-2">
           <Card className="h-[600px] flex flex-col">
@@ -269,8 +279,15 @@ const LeadChat = () => {
           </Card>
         </div>
 
-        {/* Lead Details & BANT Scoring */}
-        <div className="space-y-6">
+        {/* Right Sidebar with Lead Details and Progress */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Lead Progress - Now specific to this lead */}
+          <LeadProgress 
+            leadName={lead.name}
+            currentStep={getCurrentStep()}
+            progress={totalScore}
+          />
+
           {/* Lead Info */}
           <Card>
             <CardHeader>
