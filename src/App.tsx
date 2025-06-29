@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Layout from "./components/Layout";
+import ModernLayout from "./components/ModernLayout";
 import Dashboard from "./pages/Dashboard";
 import CompanySetup from "./pages/CompanySetup";
 import LeadQualification from "./pages/LeadQualification";
@@ -33,7 +33,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={
               <ProtectedRoute>
-                <Layout />
+                <ModernLayout />
               </ProtectedRoute>
             }>
               <Route index element={<Dashboard />} />
