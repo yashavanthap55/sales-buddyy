@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Send, User, Bot, Target, DollarSign, Clock, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import LeadProgress from '@/components/LeadProgress';
@@ -220,8 +222,8 @@ const LeadChat = () => {
   }
 
   return (
-    <div className="relative">
-      {/* Lead Progress Sidebar - Now absolutely positioned */}
+    <div className="h-screen flex flex-col relative overflow-hidden">
+      {/* Lead Progress Sidebar - Absolutely positioned */}
       <LeadProgress 
         leadName={lead?.name || 'Unknown Lead'}
         currentStep={currentStep}
@@ -229,9 +231,9 @@ const LeadChat = () => {
         onStepChange={handleStepChange}
       />
 
-      {/* Main Content - No right padding, allows full stretch */}
-      <div className="p-6 max-w-full mx-auto">
-        <div className="flex items-center gap-4 mb-6">
+      {/* Header Section - Fixed */}
+      <div className="flex-none p-4 bg-white border-b border-gray-200 z-10">
+        <div className="flex items-center gap-4">
           <Button 
             variant="outline" 
             onClick={() => navigate('/')}
@@ -240,196 +242,243 @@ const LeadChat = () => {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{lead?.name}</h1>
-            <p className="text-gray-600">{lead?.company} • {lead?.email}</p>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold">{lead?.name}</h1>
+            <p className="text-sm text-gray-600">{lead?.company} • {lead?.email}</p>
           </div>
           <Badge variant={lead?.lead_type === 'b2b' ? 'default' : 'secondary'}>
             {lead?.lead_type?.toUpperCase()}
           </Badge>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Chat Section */}
-          <div className="lg:col-span-2">
-            <Card className="h-[600px] flex flex-col">
-              <CardHeader>
-                <CardTitle>Lead Conversation</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
-                <div className="flex-1 overflow-y-auto mb-4 space-y-4">
-                  {messagesLoading ? (
-                    <div className="text-center py-4">Loading messages...</div>
-                  ) : messages.length === 0 ? (
-                    <div className="text-center py-4 text-gray-500">
-                      No messages yet. Start a conversation!
+      {/* Main Content Area - Flexible */}
+      <div className="flex-1 flex min-h-0">
+        {/* Chat Section - Takes most of the space */}
+        <div className="flex-1 flex flex-col min-w-0 bg-gray-50">
+          {/* Chat Header */}
+          <div className="flex-none px-6 py-4 bg-white border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Lead Conversation</h2>
+          </div>
+
+          {/* Messages Area - Scrollable */}
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="p-6 space-y-4">
+                {messagesLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-gray-500">Loading messages...</div>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Bot className="h-8 w-8 text-blue-600" />
+                      </div>
+                      <p className="text-gray-500">No messages yet. Start a conversation!</p>
                     </div>
-                  ) : (
-                    messages.map((msg) => (
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((msg) => (
                       <div
                         key={msg.id}
-                        className={`flex items-start gap-2 ${
+                        className={`flex items-start gap-3 animate-fade-in ${
                           msg.sender === 'user' ? 'justify-end' : 'justify-start'
                         }`}
                       >
                         {msg.sender !== 'user' && (
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                            <Bot className="h-4 w-4 text-blue-600" />
+                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Bot className="h-5 w-5 text-blue-600" />
                           </div>
                         )}
                         <div
-                          className={`max-w-[70%] p-3 rounded-lg ${
+                          className={`max-w-[75%] p-4 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
                             msg.sender === 'user'
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100'
+                              ? 'bg-blue-600 text-white rounded-br-md'
+                              : 'bg-white text-gray-900 rounded-bl-md border border-gray-200'
                           }`}
                         >
-                          <p>{msg.message}</p>
-                          <p className="text-xs opacity-70 mt-1">
-                            {new Date(msg.created_at).toLocaleTimeString()}
+                          <p className="text-sm leading-relaxed">{msg.message}</p>
+                          <p className={`text-xs mt-2 ${
+                            msg.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                          }`}>
+                            {new Date(msg.created_at).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
                           </p>
                         </div>
                         {msg.sender === 'user' && (
-                          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                            <User className="h-4 w-4 text-white" />
+                          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                            <User className="h-5 w-5 text-white" />
                           </div>
                         )}
                       </div>
-                    ))
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-                
-                <form onSubmit={handleSendMessage} className="flex gap-2">
-                  <Input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type your message..."
-                    className="flex-1"
-                  />
-                  <Button type="submit" disabled={sendMessageMutation.isPending}>
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </>
+                )}
+              </div>
+            </ScrollArea>
           </div>
 
-          {/* Lead Info and BANT Scoring */}
-          <div className="space-y-6">
-            {/* Lead Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Lead Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <span className="font-medium">Name:</span> {lead?.name}
-                </div>
-                <div>
-                  <span className="font-medium">Email:</span> {lead?.email}
-                </div>
-                <div>
-                  <span className="font-medium">Company:</span> {lead?.company}
-                </div>
-                <div>
-                  <span className="font-medium">Phone:</span> {lead?.phone || 'Not provided'}
-                </div>
-                <div>
-                  <span className="font-medium">Website:</span> {lead?.website || 'Not provided'}
-                </div>
-                <div>
-                  <span className="font-medium">Status:</span> 
-                  <Badge variant="outline" className="ml-2">{lead?.status}</Badge>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Message Input - Fixed at bottom */}
+          <div className="flex-none p-4 bg-white border-t border-gray-200">
+            <form onSubmit={handleSendMessage} className="flex gap-3">
+              <div className="flex-1">
+                <Textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Type your message..."
+                  className="min-h-[44px] max-h-32 resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(e);
+                    }
+                  }}
+                />
+              </div>
+              <Button 
+                type="submit" 
+                disabled={sendMessageMutation.isPending || !message.trim()}
+                className="h-11 px-6 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+            <p className="text-xs text-gray-500 mt-2">Press Enter to send, Shift+Enter for new line</p>
+          </div>
+        </div>
 
-            {/* BANT Scoring */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  BANT Score
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">
-                    {totalScore.toFixed(0)}%
+        {/* Right Sidebar - Lead Info and BANT Scoring */}
+        <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4">
+              {/* Lead Info */}
+              <Card className="shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Lead Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Name:</span> 
+                    <span className="text-gray-900">{lead?.name}</span>
                   </div>
-                  <div className="text-sm text-gray-600">Overall Score</div>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    <span className="font-medium">Budget</span>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Email:</span> 
+                    <span className="text-gray-900 truncate ml-2">{lead?.email}</span>
                   </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={scores.budget_score}
-                    onChange={(e) => handleScoreChange('budget_score', parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                  <div className="text-right text-sm text-gray-600">{scores.budget_score}%</div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Company:</span> 
+                    <span className="text-gray-900">{lead?.company}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Phone:</span> 
+                    <span className="text-gray-900">{lead?.phone || 'Not provided'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-600">Status:</span> 
+                    <Badge variant="outline" className="text-xs">{lead?.status}</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* BANT Scoring */}
+              <Card className="shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Target className="h-4 w-4" />
+                    BANT Score
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {totalScore.toFixed(0)}%
+                    </div>
+                    <div className="text-xs text-gray-600">Overall Score</div>
+                  </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium">Authority</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={scores.authority_score}
-                    onChange={(e) => handleScoreChange('authority_score', parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                  <div className="text-right text-sm text-gray-600">{scores.authority_score}%</div>
+                  <Separator />
                   
-                  <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4 text-purple-600" />
-                    <span className="font-medium">Need</span>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <DollarSign className="h-3 w-3 text-green-600" />
+                        <span className="text-sm font-medium">Budget</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={scores.budget_score}
+                        onChange={(e) => handleScoreChange('budget_score', parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="text-right text-xs text-gray-600 mt-1">{scores.budget_score}%</div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Shield className="h-3 w-3 text-blue-600" />
+                        <span className="text-sm font-medium">Authority</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={scores.authority_score}
+                        onChange={(e) => handleScoreChange('authority_score', parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="text-right text-xs text-gray-600 mt-1">{scores.authority_score}%</div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Target className="h-3 w-3 text-purple-600" />
+                        <span className="text-sm font-medium">Need</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={scores.need_score}
+                        onChange={(e) => handleScoreChange('need_score', parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="text-right text-xs text-gray-600 mt-1">{scores.need_score}%</div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="h-3 w-3 text-orange-600" />
+                        <span className="text-sm font-medium">Timeline</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={scores.timeline_score}
+                        onChange={(e) => handleScoreChange('timeline_score', parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="text-right text-xs text-gray-600 mt-1">{scores.timeline_score}%</div>
+                    </div>
                   </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={scores.need_score}
-                    onChange={(e) => handleScoreChange('need_score', parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                  <div className="text-right text-sm text-gray-600">{scores.need_score}%</div>
                   
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-orange-600" />
-                    <span className="font-medium">Timeline</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={scores.timeline_score}
-                    onChange={(e) => handleScoreChange('timeline_score', parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                  <div className="text-right text-sm text-gray-600">{scores.timeline_score}%</div>
-                </div>
-                
-                <Button 
-                  onClick={handleSaveScores} 
-                  className="w-full"
-                  disabled={updateScoresMutation.isPending}
-                >
-                  {updateScoresMutation.isPending ? 'Saving...' : 'Save Scores'}
-                </Button>
-              </CardContent>
-            </Card>
+                  <Button 
+                    onClick={handleSaveScores} 
+                    className="w-full text-sm"
+                    disabled={updateScoresMutation.isPending}
+                  >
+                    {updateScoresMutation.isPending ? 'Saving...' : 'Save Scores'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
