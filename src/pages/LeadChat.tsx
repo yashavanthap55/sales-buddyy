@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,6 +17,7 @@ const LeadChat = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [message, setMessage] = useState('');
+  const [currentStep, setCurrentStep] = useState(1);
   const [scores, setScores] = useState({
     budget_score: 0,
     authority_score: 0,
@@ -86,6 +86,13 @@ const LeadChat = () => {
       });
     }
   }, [leadScores]);
+
+  // Update current step based on total score
+  useEffect(() => {
+    const totalScore = (scores.budget_score + scores.authority_score + scores.need_score + scores.timeline_score) / 4;
+    const calculatedStep = getCurrentStep(totalScore);
+    setCurrentStep(calculatedStep);
+  }, [scores]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -165,15 +172,34 @@ const LeadChat = () => {
     updateScoresMutation.mutate(scores);
   };
 
+  const handleStepChange = (step: number) => {
+    setCurrentStep(step);
+    // Optionally update scores based on step
+    const stepToScoreMap = {
+      1: 10, 2: 25, 3: 40, 4: 55, 5: 70, 6: 85
+    };
+    const targetScore = stepToScoreMap[step as keyof typeof stepToScoreMap] || 10;
+    
+    // Update all scores proportionally to match the step
+    const newScores = {
+      budget_score: targetScore,
+      authority_score: targetScore,
+      need_score: targetScore,
+      timeline_score: targetScore
+    };
+    setScores(newScores);
+    updateScoresMutation.mutate(newScores);
+  };
+
   const totalScore = (scores.budget_score + scores.authority_score + scores.need_score + scores.timeline_score) / 4;
 
   // Calculate current step and progress for this lead
-  const getCurrentStep = () => {
-    if (totalScore >= 80) return 6; // Closed
-    if (totalScore >= 65) return 5; // Negotiation
-    if (totalScore >= 50) return 4; // Proposal
-    if (totalScore >= 35) return 3; // Demo
-    if (totalScore >= 20) return 2; // Qualified
+  const getCurrentStep = (score: number = totalScore) => {
+    if (score >= 80) return 6; // Closed
+    if (score >= 65) return 5; // Negotiation
+    if (score >= 50) return 4; // Proposal
+    if (score >= 35) return 3; // Demo
+    if (score >= 20) return 2; // Qualified
     return 1; // Initial
   };
 
@@ -194,7 +220,15 @@ const LeadChat = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-full mx-auto pr-96">
+      {/* Lead Progress Sidebar */}
+      <LeadProgress 
+        leadName={lead?.name || 'Unknown Lead'}
+        currentStep={currentStep}
+        progress={totalScore}
+        onStepChange={handleStepChange}
+      />
+
       <div className="flex items-center gap-4 mb-6">
         <Button 
           variant="outline" 
@@ -205,15 +239,15 @@ const LeadChat = () => {
           Back
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">{lead.name}</h1>
-          <p className="text-gray-600">{lead.company} • {lead.email}</p>
+          <h1 className="text-2xl font-bold">{lead?.name}</h1>
+          <p className="text-gray-600">{lead?.company} • {lead?.email}</p>
         </div>
-        <Badge variant={lead.lead_type === 'b2b' ? 'default' : 'secondary'}>
-          {lead.lead_type?.toUpperCase()}
+        <Badge variant={lead?.lead_type === 'b2b' ? 'default' : 'secondary'}>
+          {lead?.lead_type?.toUpperCase()}
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chat Section */}
         <div className="lg:col-span-2">
           <Card className="h-[600px] flex flex-col">
@@ -279,15 +313,8 @@ const LeadChat = () => {
           </Card>
         </div>
 
-        {/* Right Sidebar with Lead Details and Progress */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Lead Progress - Now specific to this lead */}
-          <LeadProgress 
-            leadName={lead.name}
-            currentStep={getCurrentStep()}
-            progress={totalScore}
-          />
-
+        {/* Lead Info and BANT Scoring */}
+        <div className="space-y-6">
           {/* Lead Info */}
           <Card>
             <CardHeader>
@@ -295,23 +322,23 @@ const LeadChat = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <span className="font-medium">Name:</span> {lead.name}
+                <span className="font-medium">Name:</span> {lead?.name}
               </div>
               <div>
-                <span className="font-medium">Email:</span> {lead.email}
+                <span className="font-medium">Email:</span> {lead?.email}
               </div>
               <div>
-                <span className="font-medium">Company:</span> {lead.company}
+                <span className="font-medium">Company:</span> {lead?.company}
               </div>
               <div>
-                <span className="font-medium">Phone:</span> {lead.phone || 'Not provided'}
+                <span className="font-medium">Phone:</span> {lead?.phone || 'Not provided'}
               </div>
               <div>
-                <span className="font-medium">Website:</span> {lead.website || 'Not provided'}
+                <span className="font-medium">Website:</span> {lead?.website || 'Not provided'}
               </div>
               <div>
                 <span className="font-medium">Status:</span> 
-                <Badge variant="outline" className="ml-2">{lead.status}</Badge>
+                <Badge variant="outline" className="ml-2">{lead?.status}</Badge>
               </div>
             </CardContent>
           </Card>
