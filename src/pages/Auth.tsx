@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Phone } from 'lucide-react';
+import { Building2, Phone, CheckCircle, AlertCircle } from 'lucide-react';
+import { validateMobileFormat, useMobileValidation } from '@/utils/mobileValidation';
 import logo from './../../public/logo.jpg'
 
 const Auth = () => {
@@ -24,6 +24,7 @@ const Auth = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
+  const { validateNumber, isValidating, validationResult } = useMobileValidation();
 
   useEffect(() => {
     if (user) {
@@ -52,17 +53,51 @@ const Auth = () => {
       return;
     }
     
+    // Validate mobile number format first
+    if (!validateMobileFormat(countryCode, mobileNumber)) {
+      alert('Please enter a valid mobile number for the selected country');
+      return;
+    }
+    
     setOtpLoading(true);
     
-    // Send OTP API here - integrate with your SMS service provider
-    // Example: await sendOTP(countryCode + mobileNumber);
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Validate mobile number using API
+      console.log('Validating mobile number...');
+      const validation = await validateNumber(countryCode, mobileNumber);
+      
+      if (!validation.isValid) {
+        alert(validation.error || 'Invalid mobile number');
+        setOtpLoading(false);
+        return;
+      }
+      
+      // Send OTP API integration here - integrate with your SMS service provider
+      // Example with Twilio:
+      /*
+      const response = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phoneNumber: `${countryCode}${mobileNumber}`,
+          message: `Your verification code is: ${generatedOTP}`
+        })
+      });
+      */
+      
+      // Simulate API call
+      setTimeout(() => {
+        setOtpLoading(false);
+        setShowOtpStep(true);
+        console.log(`OTP would be sent to: ${countryCode}${mobileNumber}`);
+        console.log('Mobile validation result:', validation);
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error during mobile validation:', error);
+      alert('Failed to validate mobile number. Please try again.');
       setOtpLoading(false);
-      setShowOtpStep(true);
-      console.log(`OTP would be sent to: ${countryCode}${mobileNumber}`);
-    }, 1000);
+    }
   };
 
   const handleVerifyOtp = async () => {
@@ -71,8 +106,24 @@ const Auth = () => {
       return;
     }
 
-    // Verify OTP API here - validate the OTP with your service provider
-    // Example: const isValid = await verifyOTP(countryCode + mobileNumber, otp);
+    // Verify OTP API integration here - validate the OTP with your service provider
+    // Example with Twilio Verify:
+    /*
+    const response = await fetch('/api/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phoneNumber: `${countryCode}${mobileNumber}`,
+        code: otp
+      })
+    });
+    
+    const result = await response.json();
+    if (!result.valid) {
+      alert('Invalid OTP. Please try again.');
+      return;
+    }
+    */
     
     // Simulate OTP verification
     console.log(`Verifying OTP: ${otp} for number: ${countryCode}${mobileNumber}`);
@@ -217,19 +268,36 @@ const Auth = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Input
-                        id="signup-mobile"
-                        type="tel"
-                        placeholder="Enter mobile number"
-                        value={mobileNumber}
-                        onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
-                        required
-                        className="flex-1"
-                      />
+                      <div className="flex-1 relative">
+                        <Input
+                          id="signup-mobile"
+                          type="tel"
+                          placeholder="Enter mobile number"
+                          value={mobileNumber}
+                          onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
+                          required
+                          className="flex-1"
+                        />
+                        {validationResult && (
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                            {validationResult.isValid ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <AlertCircle className="w-4 h-4 text-red-500" />
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    {validationResult && !validationResult.isValid && (
+                      <p className="text-sm text-red-600">{validationResult.error}</p>
+                    )}
+                    {validationResult && validationResult.isValid && (
+                      <p className="text-sm text-green-600">Mobile number validated successfully</p>
+                    )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={otpLoading}>
-                    {otpLoading ? 'Sending OTP...' : 'Send OTP'}
+                  <Button type="submit" className="w-full" disabled={otpLoading || isValidating}>
+                    {otpLoading ? 'Sending OTP...' : isValidating ? 'Validating...' : 'Send OTP'}
                   </Button>
                 </form>
               ) : (
