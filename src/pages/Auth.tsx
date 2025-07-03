@@ -43,7 +43,7 @@ const Auth = () => {
   };
 
   const handleForgotPassword = () => {
-    navigate('/settings');
+    navigate('/forgot-password');
   };
 
   const handleSendOtp = async () => {

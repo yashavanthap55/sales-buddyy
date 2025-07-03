@@ -15,6 +15,7 @@ import DemoDelivery from "./pages/DemoDelivery";
 import Quotation from "./pages/Quotation";
 import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/ForgotPassword";
 import LeadsManagement from "./pages/LeadsManagement";
 import LeadChat from "./pages/LeadChat";
 import Chatbot from "./pages/Chatbot";
@@ -32,6 +33,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/" element={
               <ProtectedRoute>
                 <ModernLayout />
