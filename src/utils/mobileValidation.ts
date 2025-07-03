@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 // Mobile number validation utility with API integration
 
 export interface MobileValidationResult {
