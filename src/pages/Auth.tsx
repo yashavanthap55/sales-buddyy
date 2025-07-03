@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Building2 } from 'lucide-react';
+import logo from './../../public/logo.jpg'
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -45,8 +46,9 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-8 w-8 text-blue-600 mr-2" />
-            <CardTitle className="text-2xl">SalesBuddy</CardTitle>
+            <div className="w-[80px] h-[80px]">
+              <img src={logo} alt="" />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
