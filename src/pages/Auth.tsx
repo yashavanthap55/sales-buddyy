@@ -7,14 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Building2 } from 'lucide-react';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Building2, Phone } from 'lucide-react';
 import logo from './../../public/logo.jpg'
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [countryCode, setCountryCode] = useState('+1');
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [showOtpStep, setShowOtpStep] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
@@ -34,12 +41,74 @@ const Auth = () => {
     setLoading(false);
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleForgotPassword = () => {
+    // TODO: Implement forgot password functionality
+    console.log('Forgot password clicked');
+  };
+
+  const handleSendOtp = async () => {
+    if (!mobileNumber.trim()) {
+      alert('Please enter a valid mobile number');
+      return;
+    }
+    
+    setOtpLoading(true);
+    
+    // Send OTP API here - integrate with your SMS service provider
+    // Example: await sendOTP(countryCode + mobileNumber);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setOtpLoading(false);
+      setShowOtpStep(true);
+      console.log(`OTP would be sent to: ${countryCode}${mobileNumber}`);
+    }, 1000);
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) {
+      alert('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    // Verify OTP API here - validate the OTP with your service provider
+    // Example: const isValid = await verifyOTP(countryCode + mobileNumber, otp);
+    
+    // Simulate OTP verification
+    console.log(`Verifying OTP: ${otp} for number: ${countryCode}${mobileNumber}`);
+    
+    // If OTP is valid, proceed with account creation
+    handleSignUp();
+  };
+
+  const handleSignUp = async () => {
     setLoading(true);
     const { error } = await signUp(email, password, fullName);
     setLoading(false);
   };
+
+  const handleInitialSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!fullName.trim() || !email.trim() || !password.trim() || !mobileNumber.trim()) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    // Start the OTP verification process
+    handleSendOtp();
+  };
+
+  const countryCodes = [
+    { code: '+1', country: 'US/CA' },
+    { code: '+44', country: 'UK' },
+    { code: '+91', country: 'India' },
+    { code: '+86', country: 'China' },
+    { code: '+49', country: 'Germany' },
+    { code: '+33', country: 'France' },
+    { code: '+81', country: 'Japan' },
+    { code: '+61', country: 'Australia' },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -82,6 +151,15 @@ const Auth = () => {
                     required
                   />
                 </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-sm text-primary hover:underline cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Signing in...' : 'Sign In'}
                 </Button>
@@ -89,44 +167,129 @@ const Auth = () => {
             </TabsContent>
             
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
-                  <Input
-                    id="signup-name"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
+              {!showOtpStep ? (
+                <form onSubmit={handleInitialSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-mobile">Mobile Number</Label>
+                    <div className="flex gap-2">
+                      <Select value={countryCode} onValueChange={setCountryCode}>
+                        <SelectTrigger className="w-24">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countryCodes.map(({ code, country }) => (
+                            <SelectItem key={code} value={code}>
+                              {code} ({country})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        id="signup-mobile"
+                        type="tel"
+                        placeholder="Enter mobile number"
+                        value={mobileNumber}
+                        onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
+                        required
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={otpLoading}>
+                    {otpLoading ? 'Sending OTP...' : 'Send OTP'}
+                  </Button>
+                </form>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-center space-y-2">
+                    <div className="flex items-center justify-center">
+                      <Phone className="w-8 h-8 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold">Verify Mobile Number</h3>
+                    <p className="text-sm text-muted-foreground">
+                      We've sent a 6-digit code to {countryCode}{mobileNumber}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="otp">Enter OTP</Label>
+                    <div className="flex justify-center">
+                      <InputOTP
+                        maxLength={6}
+                        value={otp}
+                        onChange={(value) => setOtp(value)}
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={handleVerifyOtp} 
+                      className="w-full" 
+                      disabled={loading || otp.length !== 6}
+                    >
+                      {loading ? 'Creating account...' : 'Verify & Create Account'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleSendOtp} 
+                      className="w-full" 
+                      disabled={otpLoading}
+                    >
+                      {otpLoading ? 'Resending...' : 'Resend OTP'}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setShowOtpStep(false)} 
+                      className="w-full"
+                    >
+                      Back to Sign Up
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Creating account...' : 'Sign Up'}
-                </Button>
-              </form>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
