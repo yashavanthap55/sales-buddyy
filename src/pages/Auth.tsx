@@ -43,8 +43,7 @@ const Auth = () => {
   };
 
   const handleForgotPassword = () => {
-    // TODO: Implement forgot password functionality
-    console.log('Forgot password clicked');
+    navigate('/settings');
   };
 
   const handleSendOtp = async () => {
