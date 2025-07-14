@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import img from './../../public/logo.jpg'
 import { 
   Home, 
   Building2, 
@@ -44,13 +45,13 @@ const ModernLayout = () => {
         onMouseLeave={() => setSidebarHovered(false)}
       >
         {/* Header */}
-        <div className="flex items-center h-16 px-4 border-b border-gray-200/50">
+        <div className="flex  items-center h-16 px-3 border-b border-gray-200/50">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm font-bold">S</span>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+              <img src={img} alt="" />
             </div>
             <div className={`ml-3 transition-all duration-300 ${sidebarHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold text-blue-500">
                 SalesBuddy
               </h1>
             </div>
