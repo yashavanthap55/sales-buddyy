@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
 import { FileText, DollarSign, Send, Edit, Check, AlertCircle } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Quotation = () => {
+   const { isDarkMode } = useTheme();
   const [quote, setQuote] = useState({
     customer: 'Acme Corporation',
     contact: 'John Doe',
@@ -53,7 +55,11 @@ const Quotation = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Negotiation & Quotation</h1>
+        <h1 className={`text-3xl ${
+          isDarkMode 
+            ? 'text-gray-300' 
+            : 'text-gray-900'
+        } font-bold `}>Negotiation & Quotation</h1>
         <p className="text-gray-600 mt-2">
           Create and manage quotes with intelligent margin suggestions
         </p>

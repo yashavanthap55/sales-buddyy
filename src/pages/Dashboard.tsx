@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Badge } from '@/components/ui/badge';
 import { 
   Users, 
@@ -20,6 +21,7 @@ import {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
 
   // Fetch leads with scores
@@ -66,7 +68,11 @@ const Dashboard = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className={`text-3xl ${
+          isDarkMode 
+            ? 'text-gray-300' 
+            : 'text-gray-900'
+        } font-bold`}>Dashboard</h1>
           <p className="text-gray-600">Welcome back! Here's your sales overview.</p>
         </div>
         <Button onClick={() => navigate('/leads')}>

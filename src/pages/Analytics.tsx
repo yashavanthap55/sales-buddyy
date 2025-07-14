@@ -2,8 +2,10 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Mail, Eye, MousePointer, Target } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Analytics = () => {
+   const { isDarkMode } = useTheme();
   const engagementData = [
     { name: 'Week 1', emails: 45, opens: 32, clicks: 18, responses: 8 },
     { name: 'Week 2', emails: 52, opens: 38, clicks: 22, responses: 12 },
@@ -66,7 +68,11 @@ const Analytics = () => {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+        <h1 className={`text-3xl font-bold ${
+          isDarkMode 
+            ? 'text-gray-300' 
+            : 'text-gray-900'
+        }`}>Analytics Dashboard</h1>
         <p className="text-gray-600 mt-2">
           Track engagement levels and win/loss probability across your sales funnel
         </p>

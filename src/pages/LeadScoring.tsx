@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
 import { Target, DollarSign, Users, Calendar, TrendingUp } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const LeadScoring = () => {
+   const { isDarkMode } = useTheme();
   const [bantScores, setBantScores] = useState({
     budget: 75,
     authority: 60,
@@ -72,7 +74,11 @@ const LeadScoring = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Lead Scoring Dashboard</h1>
+        <h1 className={`text-3xl ${
+          isDarkMode 
+            ? 'text-gray-300' 
+            : 'text-gray-900'
+        } font-bold `}>Lead Scoring Dashboard</h1>
         <p className="text-gray-600 mt-2">
           Evaluate leads using the BANT framework for qualified opportunities
         </p>

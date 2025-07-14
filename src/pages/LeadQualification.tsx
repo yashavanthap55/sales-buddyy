@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
 import { Search, ExternalLink, Building2, Mail, Phone, Globe } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const LeadQualification = () => {
   const [activeTab, setActiveTab] = useState<'b2b' | 'b2c'>('b2b');
+   const { isDarkMode } = useTheme();
   const [leadData, setLeadData] = useState({
     name: '',
     email: '',
@@ -53,7 +55,11 @@ const LeadQualification = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Lead Qualification</h1>
+        <h1 className={`text-3xl ${
+          isDarkMode 
+            ? 'text-gray-300' 
+            : 'text-gray-900'
+        } font-bold`}>Lead Qualification</h1>
         <p className="text-gray-600 mt-2">
           Qualify and enrich your leads with comprehensive data insights
         </p>

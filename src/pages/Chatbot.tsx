@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User, Copy, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Message {
   id: string;
@@ -23,6 +24,7 @@ const Chatbot = () => {
       timestamp: new Date()
     }
   ]);
+   const { isDarkMode } = useTheme();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -85,7 +87,11 @@ const Chatbot = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto">
       <div className="mb-4">
-        <h1 className="text-3xl font-bold text-gray-900">AI Assistant</h1>
+        <h1 className={`text-3xl ${
+          isDarkMode 
+            ? 'text-gray-300' 
+            : 'text-gray-900'
+        } font-bold`}>AI Assistant</h1>
         <p className="text-gray-600">Chat with our AI assistant for help with your sales process</p>
       </div>
 
