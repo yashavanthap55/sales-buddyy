@@ -14,13 +14,15 @@ import {
   LogOut,
   MessageSquare,
   Bot,
-  ChevronRight
+  ChevronRight,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from './ThemeToggle';
 
 const ModernLayout = () => {
   const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const { user, signOut } = useAuth();
 
   const navigation = [
@@ -36,23 +38,33 @@ const ModernLayout = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
+    <div className={`min-h-screen flex transition-colors duration-300 ${
+      isDarkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-gray-50 to-gray-100'
+    }`}>
       {/* Modern Sidebar */}
       <div 
-        className={`fixed left-0 top-0 h-full bg-white/95 backdrop-blur-md shadow-2xl border-r border-gray-200/50 transition-all duration-500 ease-in-out z-50 ${
+        className={`fixed left-0 top-0 h-full backdrop-blur-md shadow-2xl border-r transition-all duration-500 ease-in-out z-50 ${
           sidebarHovered ? 'w-80' : 'w-16'
+        } ${
+          isDarkMode 
+            ? 'bg-gray-800/95 border-gray-700/50' 
+            : 'bg-white/95 border-gray-200/50'
         }`}
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
       >
         {/* Header */}
-        <div className="flex  items-center h-16 px-3 border-b border-gray-200/50">
+        <div className={`flex  items-center h-16 px-3 border-b transition-colors duration-300 ${
+          isDarkMode ? 'border-gray-700/50' : 'border-gray-200/50'
+        }`}>
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center">
               <img src={img} alt="" />
             </div>
             <div className={`ml-3 transition-all duration-300 ${sidebarHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
-              <h1 className="text-xl font-bold text-blue-500">
+              <h1 className={`text-xl font-bold transition-colors duration-300 ${
+                isDarkMode ? 'text-blue-400' : 'text-blue-500'
+              }`}>
                 SalesBuddy
               </h1>
             </div>
@@ -68,8 +80,12 @@ const ModernLayout = () => {
               className={({ isActive }) =>
                 `flex items-center px-3 py-3 text-sm font-medium rounded-xl mb-2 transition-all duration-300 group relative ${
                   isActive
-                    ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-md'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? isDarkMode 
+                      ? 'bg-gradient-to-r from-gray-700 to-gray-600 text-blue-400 shadow-md'
+                      : 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-md'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`
               }
             >
@@ -85,7 +101,9 @@ const ModernLayout = () => {
         </nav>
 
         {/* User section */}
-        <div className="p-4 border-t border-gray-200/50">
+        <div className={`p-4 border-t transition-colors duration-300 ${
+          isDarkMode ? 'border-gray-700/50' : 'border-gray-200/50'
+        }`}>
           <div className="flex items-center">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-white text-sm font-medium">
@@ -93,15 +111,28 @@ const ModernLayout = () => {
               </span>
             </div>
             <div className={`ml-3 flex-1 transition-all duration-300 ${sidebarHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
-              <p className="text-sm font-medium text-gray-700 truncate">{user?.email}</p>
+              <p className={`text-sm font-medium truncate transition-colors duration-300 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>{user?.email}</p>
             </div>
             <div className={`flex items-center gap-1 transition-all duration-300 ${sidebarHovered ? 'opacity-100' : 'opacity-0'}`}>
-              <ThemeToggle />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className={`transition-colors duration-300 ${
+                  isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={signOut}
-                className="text-gray-500 hover:text-gray-700"
+                className={`transition-colors duration-300 ${
+                  isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'
+                }`}
               >
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -112,7 +143,9 @@ const ModernLayout = () => {
 
       {/* Main content */}
       <div className={`flex-1 transition-all duration-500 ease-in-out ${sidebarHovered ? 'ml-80' : 'ml-16'}`}>
-        <main className="p-8">
+        <main className={`p-8 min-h-screen transition-colors duration-300 ${
+          isDarkMode ? 'bg-gray-900' : 'bg-transparent'
+        }`}>
           <Outlet />
         </main>
       </div>
