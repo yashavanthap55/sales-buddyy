@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import img from './../../public/logo.jpg'
 import { 
   Home, 
@@ -22,7 +23,7 @@ import { Button } from '@/components/ui/button';
 
 const ModernLayout = () => {
   const [sidebarHovered, setSidebarHovered] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const { user, signOut } = useAuth();
 
   const navigation = [
@@ -35,6 +36,13 @@ const ModernLayout = () => {
     { name: 'Demo Delivery', href: '/demo-delivery', icon: Send },
     { name: 'Quotation', href: '/quotation', icon: FileText },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+    { 
+      name: 'Toggle Theme', 
+      href: '#', 
+      icon: isDarkMode ? Sun : Moon,
+      action: toggleDarkMode,
+      isAction: true
+    },
   ];
 
   return (
@@ -73,31 +81,55 @@ const ModernLayout = () => {
 
         {/* Navigation */}
         <nav className="mt-6 px-2 flex-1">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.href}
-              className={({ isActive }) =>
-                `flex items-center px-3 py-3 text-sm font-medium rounded-xl mb-2 transition-all duration-300 group relative ${
-                  isActive
-                    ? isDarkMode 
-                      ? 'bg-gradient-to-r from-gray-700 to-gray-600 text-blue-400 shadow-md'
-                      : 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-md'
-                    : isDarkMode
+          {navigation.map((item) => {
+            if (item.isAction) {
+              return (
+                <button
+                  key={item.name}
+                  onClick={item.action}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-xl mb-2 transition-all duration-300 group relative ${
+                    isDarkMode
                       ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`
-              }
-            >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              <span className={`ml-3 transition-all duration-300 ${sidebarHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
-                {item.name}
-              </span>
-              {!sidebarHovered && (
-                <ChevronRight className="absolute left-12 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              )}
-            </NavLink>
-          ))}
+                  }`}
+                >
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  <span className={`ml-3 transition-all duration-300 ${sidebarHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
+                    {item.name}
+                  </span>
+                  {!sidebarHovered && (
+                    <ChevronRight className="absolute left-12 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  )}
+                </button>
+              );
+            }
+            
+            return (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                className={({ isActive }) =>
+                  `flex items-center px-3 py-3 text-sm font-medium rounded-xl mb-2 transition-all duration-300 group relative ${
+                    isActive
+                      ? isDarkMode 
+                        ? 'bg-gradient-to-r from-gray-700 to-gray-600 text-blue-400 shadow-md'
+                        : 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-md'
+                      : isDarkMode
+                        ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`
+                }
+              >
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                <span className={`ml-3 transition-all duration-300 ${sidebarHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
+                  {item.name}
+                </span>
+                {!sidebarHovered && (
+                  <ChevronRight className="absolute left-12 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* User section */}
@@ -115,17 +147,7 @@ const ModernLayout = () => {
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>{user?.email}</p>
             </div>
-            <div className={`flex items-center gap-1 transition-all duration-300 ${sidebarHovered ? 'opacity-100' : 'opacity-0'}`}>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className={`transition-colors duration-300 ${
-                  isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
+            <div className={`transition-all duration-300 ${sidebarHovered ? 'opacity-100' : 'opacity-0'}`}>
               <Button
                 variant="ghost"
                 size="sm"
