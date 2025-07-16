@@ -2,10 +2,17 @@
 import React, { useState } from 'react';
 import { Check, AlertCircle } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import ModernFileUpload from '@/components/ModernFileUpload';
 
-const CompanySetup = () => {
+interface CompanySetupProps {
+  onSetupComplete?: () => void;
+}
+
+const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
   const { isDarkMode } = useTheme();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     companyName: '',
     email: '',
@@ -36,12 +43,43 @@ const CompanySetup = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      if (!user) {
+        console.error('No user found');
+        return;
+      }
+
+      // Update the user's profile with company information
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: formData.email,
+          company_name: formData.companyName,
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
+        }, {
+          onConflict: 'id'
+        });
+
+      if (error) {
+        console.error('Error updating profile:', error);
+        return;
+      }
+
       setSubmitted(true);
       console.log('Company setup submitted:', formData, uploadedFiles);
-    }, 1500);
+      
+      // Call the callback to notify parent component
+      if (onSetupComplete) {
+        setTimeout(() => {
+          onSetupComplete();
+        }, 2000); // Give user time to see success message
+      }
+    } catch (error) {
+      console.error('Error during company setup:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isFormValid = formData.companyName && formData.email && formData.acceptTerms;

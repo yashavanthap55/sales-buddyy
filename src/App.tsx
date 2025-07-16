@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ModernLayout from "./components/ModernLayout";
+import ConditionalDashboard from "./components/ConditionalDashboard";
 import Dashboard from "./pages/Dashboard";
 import CompanySetup from "./pages/CompanySetup";
 import LeadQualification from "./pages/LeadQualification";
@@ -42,8 +43,9 @@ const App = () => (
                 <ModernLayout />
               </ProtectedRoute>
             }>
-              <Route index element={<CompanySetup />} />
+              <Route index element={<ConditionalDashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="company-setup" element={<CompanySetup />} />
               <Route path="leads" element={<LeadsManagement />} />
               <Route path="lead/:leadId" element={<LeadChat />} />
               <Route path="lead-qualification" element={<LeadQualification />} />
