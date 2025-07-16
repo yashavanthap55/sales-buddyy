@@ -21,6 +21,7 @@ import LeadsManagement from "./pages/LeadsManagement";
 import LeadChat from "./pages/LeadChat";
 import Chatbot from "./pages/Chatbot";
 import Settings from "./pages/Settings";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,8 +42,8 @@ const App = () => (
                 <ModernLayout />
               </ProtectedRoute>
             }>
-              <Route index element={<Dashboard />} />
-              <Route path="company-setup" element={<CompanySetup />} />
+              <Route index element={<CompanySetup />} />
+              <Route path="dashboard" element={<Dashboard />} />
               <Route path="leads" element={<LeadsManagement />} />
               <Route path="lead/:leadId" element={<LeadChat />} />
               <Route path="lead-qualification" element={<LeadQualification />} />
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="analytics" element={<Analytics />} />
               <Route path="chatbot" element={<Chatbot />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="terms" element={<TermsAndConditions />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
