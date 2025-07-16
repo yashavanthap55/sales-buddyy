@@ -22,6 +22,7 @@ import LeadChat from "./pages/LeadChat";
 import Chatbot from "./pages/Chatbot";
 import Settings from "./pages/Settings";
 import TermsAndConditions from "./pages/TermsAndConditions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="chatbot" element={<Chatbot />} />
               <Route path="settings" element={<Settings />} />
               <Route path="terms" element={<TermsAndConditions />} />
+              <Route path="privacy-policy" element={<PrivacyPolicy />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

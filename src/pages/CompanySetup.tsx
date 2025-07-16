@@ -304,11 +304,11 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
             />
             <label htmlFor="acceptTerms" className={`ml-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
               I accept the{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-500 underline font-medium">
+              <a href="/terms" className="text-blue-600 hover:text-blue-500 underline font-medium">
                 Terms & Conditions
               </a>{' '}
               and{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-500 underline font-medium">
+              <a href="/privacy-policy" className="text-blue-600 hover:text-blue-500 underline font-medium">
                 Privacy Policy
               </a>
             </label>
