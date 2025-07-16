@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +23,39 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
+  const [checkingSetup, setCheckingSetup] = useState(true);
+
+  // Check if company setup is complete
+  useEffect(() => {
+    const checkCompanySetup = async () => {
+      if (!user) {
+        setCheckingSetup(false);
+        return;
+      }
+
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('company_name')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+        } else if (!profile || !profile.company_name) {
+          // No company setup, redirect to company setup page
+          navigate('/company-setup', { replace: true });
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking company setup:', error);
+      } finally {
+        setCheckingSetup(false);
+      }
+    };
+
+    checkCompanySetup();
+  }, [user, navigate]);
 
   // Fetch leads with scores
   const { data: leads = [], isLoading } = useQuery({
@@ -63,6 +96,18 @@ const Dashboard = () => {
     if (score >= 60) return 'text-yellow-600';
     return 'text-red-600';
   };
+
+  // Show loading while checking setup
+  if (checkingSetup) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className={`mt-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

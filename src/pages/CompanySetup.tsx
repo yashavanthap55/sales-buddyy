@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Check, AlertCircle } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import ModernFileUpload from '@/components/ModernFileUpload';
 
@@ -13,6 +14,7 @@ interface CompanySetupProps {
 const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     companyName: '',
     email: '',
@@ -69,12 +71,14 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
       setSubmitted(true);
       console.log('Company setup submitted:', formData, uploadedFiles);
       
-      // Call the callback to notify parent component
-      if (onSetupComplete) {
-        setTimeout(() => {
+      // Redirect to dashboard after 2 seconds
+      setTimeout(() => {
+        if (onSetupComplete) {
           onSetupComplete();
-        }, 2000); // Give user time to see success message
-      }
+        } else {
+          navigate('/', { replace: true });
+        }
+      }, 2000);
     } catch (error) {
       console.error('Error during company setup:', error);
     } finally {
