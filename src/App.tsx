@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ModernLayout from "./components/ModernLayout";
+import CompanySetupGuard from "./components/CompanySetupGuard";
 import Dashboard from "./pages/Dashboard";
 import CompanySetup from "./pages/CompanySetup";
 import LeadQualification from "./pages/LeadQualification";
@@ -40,7 +41,9 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/" element={
               <ProtectedRoute>
-                <ModernLayout />
+                <CompanySetupGuard>
+                  <ModernLayout />
+                </CompanySetupGuard>
               </ProtectedRoute>
             }>
               <Route index element={<Dashboard />} />

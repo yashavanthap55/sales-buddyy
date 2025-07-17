@@ -22,37 +22,6 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
-  const [checkingSetup, setCheckingSetup] = useState(true);
-  const [companyNotSet, setCompanyNotSet] = useState(false);
-
-  useEffect(() => {
-    const checkCompanySetup = async () => {
-      if (!user) {
-        setCheckingSetup(false);
-        return;
-      }
-
-      try {
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("company_name")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Error fetching profile:", error);
-        } else if (!profile || !profile.company_name) {
-          setCompanyNotSet(true);
-        }
-      } catch (error) {
-        console.error("Error checking company setup:", error);
-      } finally {
-        setCheckingSetup(false);
-      }
-    };
-
-    checkCompanySetup();
-  }, [user]);
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["dashboard-leads"],
@@ -102,24 +71,6 @@ const Dashboard = () => {
     return "text-red-600";
   };
 
-  if (checkingSetup) {
-    return (
-      <div
-        className={`min-h-screen flex items-center justify-center ${
-          isDarkMode ? "bg-gray-900" : "bg-gray-50"
-        }`}
-      >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p
-            className={`mt-4 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
-          >
-            Loading...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -142,23 +93,6 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {companyNotSet && (
-        <div
-          className={`p-4 rounded-md border flex justify-between items-center ${
-            isDarkMode
-              ? "bg-yellow-900 text-yellow-200 border-yellow-700"
-              : "bg-yellow-100 text-yellow-800 border-yellow-300"
-          }`}
-        >
-          <div>
-            <strong>Company profile not set up yet.</strong>
-            <p className="text-sm">Please complete your company setup</p>
-          </div>
-          <Button className="ml-4" onClick={() => navigate("/company-setup")}>
-            Go to Setup
-          </Button>
-        </div>
-      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
