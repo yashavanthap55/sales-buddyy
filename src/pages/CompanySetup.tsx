@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
-import { Check, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Check, AlertCircle, Edit, Building } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import ModernFileUpload from '@/components/ModernFileUpload';
 
 interface CompanySetupProps {
@@ -30,6 +31,101 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [existingProfile, setExistingProfile] = useState<any>(null);
+  const [existingProducts, setExistingProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadExistingData();
+  }, [user]);
+
+  const loadExistingData = async () => {
+    if (!user) return;
+    
+    try {
+      // Load profile data
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Error loading profile:', profileError);
+      } else if (profile && profile.company_name) {
+        setExistingProfile(profile);
+        setFormData({
+          companyName: profile.company_name || '',
+          email: profile.email || '',
+          industry: profile.industry || '',
+          headquarters: profile.headquarters || '',
+          website: profile.website || '',
+          linkedin_url: profile.linkedin_url || '',
+          acceptTerms: true
+        });
+      }
+
+      // Load products data
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (productsError) {
+        console.error('Error loading products:', productsError);
+      } else if (products) {
+        setExistingProducts(products);
+        setProducts(products.map(p => ({ name: p.name, description: p.description || '' })));
+        setProductCount(products.length);
+      }
+    } catch (error) {
+      console.error('Error loading existing data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    if (existingProfile) {
+      setFormData({
+        companyName: existingProfile.company_name || '',
+        email: existingProfile.email || '',
+        industry: existingProfile.industry || '',
+        headquarters: existingProfile.headquarters || '',
+        website: existingProfile.website || '',
+        linkedin_url: existingProfile.linkedin_url || '',
+        acceptTerms: true
+      });
+    }
+    if (existingProducts.length > 0) {
+      setProducts(existingProducts.map(p => ({ name: p.name, description: p.description || '' })));
+      setProductCount(existingProducts.length);
+    }
+  };
+
+  const handleSetupAnotherCompany = () => {
+    setFormData({
+      companyName: '',
+      email: '',
+      industry: '',
+      headquarters: '',
+      website: '',
+      linkedin_url: '',
+      acceptTerms: false,
+    });
+    setProducts([]);
+    setProductCount(0);
+    setExistingProfile(null);
+    setExistingProducts([]);
+    setIsEditing(false);
+    setSubmitted(false);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -89,6 +185,14 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
         return;
       }
 
+      // Handle products - delete existing and save new ones
+      if (existingProducts.length > 0) {
+        await supabase
+          .from('products')
+          .delete()
+          .eq('user_id', user.id);
+      }
+
       // Save products if any were entered manually
       if (showManualEntry && products.length > 0) {
         const productsToSave = products.filter(product => product.name.trim() !== '');
@@ -111,17 +215,20 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
         }
       }
 
-      setSubmitted(true);
-      console.log('Company setup submitted:', formData, uploadedFiles);
+      // Reload data and exit editing mode
+      await loadExistingData();
+      setIsEditing(false);
+      toast.success('Company setup updated successfully!');
       
-      // Redirect to dashboard after 2 seconds
-      setTimeout(() => {
-        if (onSetupComplete) {
-          onSetupComplete();
-        } else {
-          navigate('/', { replace: true });
-        }
-      }, 2000);
+      if (!existingProfile) {
+        setTimeout(() => {
+          if (onSetupComplete) {
+            onSetupComplete();
+          } else {
+            navigate('/', { replace: true });
+          }
+        }, 2000);
+      }
     } catch (error) {
       console.error('Error during company setup:', error);
     } finally {
@@ -131,26 +238,158 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
 
   const isFormValid = formData.companyName && formData.email && formData.acceptTerms;
 
-  if (submitted) {
+  if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className={`backdrop-blur-sm rounded-3xl p-12 shadow-2xl border text-center ${
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show details view if user has completed setup and not editing
+  if (existingProfile && !isEditing) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-10">
+          <h1 className={`text-4xl font-bold mb-4 ${
+            isDarkMode 
+              ? 'text-gray-100' 
+              : 'bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent'
+          }`}>
+            Company Details
+          </h1>
+          <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Your company profile information
+          </p>
+        </div>
+
+        {/* Company Information Display */}
+        <div className={`backdrop-blur-sm rounded-3xl p-8 shadow-xl border mb-8 ${
           isDarkMode 
             ? 'bg-gray-800/80 border-gray-700/50' 
             : 'bg-white/80 border-gray-200/50'
         }`}>
-          <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="h-10 w-10 text-white" />
+          <div className="flex items-center justify-between mb-6">
+            <h3 className={`text-2xl font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+              Company Information
+            </h3>
+            <button
+              onClick={handleEdit}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300"
+            >
+              <Edit className="h-4 w-4" />
+              Edit
+            </button>
           </div>
-          <h2 className={`text-3xl font-bold mb-4 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>Setup Complete!</h2>
-          <p className={`mb-8 text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Your company profile has been created successfully. You can now start qualifying leads.
-          </p>
-          <button 
-            onClick={() => setSubmitted(false)}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-2xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Company Name
+              </label>
+              <p className={`text-lg ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                {existingProfile.company_name || 'Not provided'}
+              </p>
+            </div>
+            <div>
+              <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Business Email
+              </label>
+              <p className={`text-lg ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                {existingProfile.email || 'Not provided'}
+              </p>
+            </div>
+            <div>
+              <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Industry
+              </label>
+              <p className={`text-lg ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                {existingProfile.industry || 'Not provided'}
+              </p>
+            </div>
+            <div>
+              <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Headquarters
+              </label>
+              <p className={`text-lg ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                {existingProfile.headquarters || 'Not provided'}
+              </p>
+            </div>
+            <div>
+              <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Website
+              </label>
+              <p className={`text-lg ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                {existingProfile.website ? (
+                  <a href={existingProfile.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 underline">
+                    {existingProfile.website}
+                  </a>
+                ) : (
+                  'Not provided'
+                )}
+              </p>
+            </div>
+            <div>
+              <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                LinkedIn URL
+              </label>
+              <p className={`text-lg ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                {existingProfile.linkedin_url ? (
+                  <a href={existingProfile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 underline">
+                    {existingProfile.linkedin_url}
+                  </a>
+                ) : (
+                  'Not provided'
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Products Display */}
+        <div className={`backdrop-blur-sm rounded-3xl p-8 shadow-xl border mb-8 ${
+          isDarkMode 
+            ? 'bg-gray-800/80 border-gray-700/50' 
+            : 'bg-white/80 border-gray-200/50'
+        }`}>
+          <h3 className={`text-2xl font-semibold mb-6 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+            Products ({existingProducts.length})
+          </h3>
+          
+          {existingProducts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {existingProducts.map((product, index) => (
+                <div key={product.id} className={`p-6 border rounded-2xl ${
+                  isDarkMode 
+                    ? 'border-gray-600 bg-gray-700/30' 
+                    : 'border-gray-200 bg-gray-50'
+                }`}>
+                  <h4 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                    {product.name}
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    {product.description || 'No description provided'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              No products added yet
+            </p>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <button
+            onClick={handleSetupAnotherCompany}
+            className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
-            Setup Another Company
+            <Building className="h-5 w-5" />
+            Set Another Company
           </button>
         </div>
       </div>
@@ -486,24 +725,35 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
               </div>
             )}
             
-            <button
-              type="submit"
-              disabled={!isFormValid || isSubmitting}
-              className={`ml-auto px-10 py-4 rounded-2xl font-semibold transition-all duration-300 transform ${
-                isFormValid && !isSubmitting
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:scale-105 shadow-lg hover:shadow-xl'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              {isSubmitting ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Setting up...
-                </div>
-              ) : (
-                'Complete Setup'
+            <div className="flex gap-4 ml-auto">
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="px-8 py-4 rounded-2xl font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-300"
+                >
+                  Cancel
+                </button>
               )}
-            </button>
+              <button
+                type="submit"
+                disabled={!isFormValid || isSubmitting}
+                className={`px-10 py-4 rounded-2xl font-semibold transition-all duration-300 transform ${
+                  isFormValid && !isSubmitting
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:scale-105 shadow-lg hover:shadow-xl'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Setting up...
+                  </div>
+                ) : (
+                  'Complete Setup'
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </form>
