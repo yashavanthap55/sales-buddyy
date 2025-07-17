@@ -170,30 +170,69 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company_name: string | null
           created_at: string
           email: string | null
           full_name: string | null
+          headquarters: string | null
           id: string
+          industry: string | null
+          linkedin_url: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           company_name?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
+          headquarters?: string | null
           id: string
+          industry?: string | null
+          linkedin_url?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           company_name?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
+          headquarters?: string | null
           id?: string
+          industry?: string | null
+          linkedin_url?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }

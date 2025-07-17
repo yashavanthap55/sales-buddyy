@@ -19,11 +19,14 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
     companyName: '',
     email: '',
     industry: '',
-    companySize: '',
+    headquarters: '',
     website: '',
-    phone: '',
+    linkedin_url: '',
     acceptTerms: false,
   });
+  const [productCount, setProductCount] = useState(0);
+  const [products, setProducts] = useState<{name: string, description: string}[]>([]);
+  const [showManualEntry, setShowManualEntry] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -34,6 +37,20 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
+  };
+
+  const handleProductCountChange = (count: number) => {
+    setProductCount(count);
+    const newProducts = Array(count).fill(null).map((_, index) => 
+      products[index] || { name: '', description: '' }
+    );
+    setProducts(newProducts);
+  };
+
+  const handleProductChange = (index: number, field: 'name' | 'description', value: string) => {
+    setProducts(prev => prev.map((product, i) => 
+      i === index ? { ...product, [field]: value } : product
+    ));
   };
 
   const handleFilesUpload = (files: File[]) => {
@@ -52,20 +69,46 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
       }
 
       // Update the user's profile with company information
-      const { error } = await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,
           email: formData.email,
           company_name: formData.companyName,
+          headquarters: formData.headquarters,
+          linkedin_url: formData.linkedin_url,
+          industry: formData.industry,
+          website: formData.website,
           full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
         }, {
           onConflict: 'id'
         });
 
-      if (error) {
-        console.error('Error updating profile:', error);
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
         return;
+      }
+
+      // Save products if any were entered manually
+      if (showManualEntry && products.length > 0) {
+        const productsToSave = products.filter(product => product.name.trim() !== '');
+        
+        if (productsToSave.length > 0) {
+          const { error: productsError } = await supabase
+            .from('products')
+            .insert(
+              productsToSave.map(product => ({
+                user_id: user.id,
+                name: product.name.trim(),
+                description: product.description.trim()
+              }))
+            );
+
+          if (productsError) {
+            console.error('Error saving products:', productsError);
+            return;
+          }
+        }
       }
 
       setSubmitted(true);
@@ -206,27 +249,22 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
             </div>
 
             <div>
-              <label htmlFor="companySize" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Company Size
+              <label htmlFor="headquarters" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Headquarters
               </label>
-              <select
-                id="companySize"
-                name="companySize"
-                value={formData.companySize}
+              <input
+                type="text"
+                id="headquarters"
+                name="headquarters"
+                value={formData.headquarters}
                 onChange={handleInputChange}
                 className={`w-full px-6 py-4 border rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm ${
                   isDarkMode 
-                    ? 'border-gray-600 bg-gray-700/50 text-gray-100' 
-                    : 'border-gray-300 bg-white/50 text-gray-900'
+                    ? 'border-gray-600 bg-gray-700/50 text-gray-100 placeholder-gray-400' 
+                    : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500'
                 }`}
-              >
-                <option value="">Select size</option>
-                <option value="1-10">1-10 employees</option>
-                <option value="11-50">11-50 employees</option>
-                <option value="51-200">51-200 employees</option>
-                <option value="201-1000">201-1000 employees</option>
-                <option value="1000+">1000+ employees</option>
-              </select>
+                placeholder="e.g., New York, USA"
+              />
             </div>
 
             <div>
@@ -249,24 +287,150 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
             </div>
 
             <div>
-              <label htmlFor="phone" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Phone Number
+              <label htmlFor="linkedin_url" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                LinkedIn URL
               </label>
               <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
+                type="url"
+                id="linkedin_url"
+                name="linkedin_url"
+                value={formData.linkedin_url}
                 onChange={handleInputChange}
                 className={`w-full px-6 py-4 border rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm ${
                   isDarkMode 
                     ? 'border-gray-600 bg-gray-700/50 text-gray-100 placeholder-gray-400' 
                     : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500'
                 }`}
-                placeholder="+1 (555) 123-4567"
+                placeholder="https://linkedin.com/company/yourcompany"
               />
             </div>
           </div>
+        </div>
+
+        {/* Product Details */}
+        <div className={`backdrop-blur-sm rounded-3xl p-8 shadow-xl border ${
+          isDarkMode 
+            ? 'bg-gray-800/80 border-gray-700/50' 
+            : 'bg-white/80 border-gray-200/50'
+        }`}>
+          <h3 className={`text-2xl font-semibold mb-6 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>Product Details</h3>
+          
+          <div className="mb-6">
+            <label htmlFor="productCount" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Number of Products
+            </label>
+            <input
+              type="number"
+              id="productCount"
+              min="0"
+              max="20"
+              value={productCount}
+              onChange={(e) => handleProductCountChange(parseInt(e.target.value) || 0)}
+              className={`w-full px-6 py-4 border rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm ${
+                isDarkMode 
+                  ? 'border-gray-600 bg-gray-700/50 text-gray-100 placeholder-gray-400' 
+                  : 'border-gray-300 bg-white/50 text-gray-900 placeholder-gray-500'
+              }`}
+              placeholder="Enter number of products"
+            />
+          </div>
+
+          {productCount > 0 && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setShowManualEntry(true)}
+                  className={`flex-1 px-6 py-3 rounded-xl border-2 transition-all duration-300 ${
+                    showManualEntry
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : isDarkMode
+                        ? 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  Manual Entry
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowManualEntry(false)}
+                  className={`flex-1 px-6 py-3 rounded-xl border-2 transition-all duration-300 ${
+                    !showManualEntry
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : isDarkMode
+                        ? 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  Upload Files
+                </button>
+              </div>
+
+              {showManualEntry ? (
+                <div className="space-y-6">
+                  {products.map((product, index) => (
+                    <div key={index} className={`p-6 border rounded-2xl ${
+                      isDarkMode 
+                        ? 'border-gray-600 bg-gray-700/30' 
+                        : 'border-gray-200 bg-gray-50'
+                    }`}>
+                      <h4 className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                        Product {index + 1}
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            Product Name
+                          </label>
+                          <input
+                            type="text"
+                            value={product.name}
+                            onChange={(e) => handleProductChange(index, 'name', e.target.value)}
+                            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ${
+                              isDarkMode 
+                                ? 'border-gray-600 bg-gray-700/50 text-gray-100 placeholder-gray-400' 
+                                : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
+                            }`}
+                            placeholder="Enter product name"
+                          />
+                        </div>
+                        <div>
+                          <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            Description
+                          </label>
+                          <textarea
+                            value={product.description}
+                            onChange={(e) => handleProductChange(index, 'description', e.target.value)}
+                            rows={3}
+                            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 resize-none ${
+                              isDarkMode 
+                                ? 'border-gray-600 bg-gray-700/50 text-gray-100 placeholder-gray-400' 
+                                : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
+                            }`}
+                            placeholder="Enter product description"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={`p-6 border-2 border-dashed rounded-2xl text-center ${
+                  isDarkMode 
+                    ? 'border-gray-600 bg-gray-700/30' 
+                    : 'border-gray-300 bg-gray-50'
+                }`}>
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Upload product files (catalogs, specifications, etc.)
+                  </p>
+                  <ModernFileUpload 
+                    onFilesUpload={handleFilesUpload}
+                    maxFiles={productCount}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Document Upload */}
