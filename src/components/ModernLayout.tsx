@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useCompanySetup } from '@/hooks/useCompanySetup';
 import img from './../../public/logo.jpg'
 import { 
   Home, 
@@ -17,7 +18,8 @@ import {
   Bot,
   ChevronRight,
   Moon,
-  Sun
+  Sun,
+  Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -25,6 +27,7 @@ const ModernLayout = () => {
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { user, signOut } = useAuth();
+  const { hasCompanySetup, loading } = useCompanySetup();
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
@@ -101,6 +104,26 @@ const ModernLayout = () => {
                     <ChevronRight className="absolute left-12 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   )}
                 </button>
+              );
+            }
+            
+            const isLocked = !hasCompanySetup && item.href !== '/company-setup';
+            
+            if (isLocked) {
+              return (
+                <div
+                  key={item.name}
+                  className={`flex items-center px-3 py-3 text-sm font-medium rounded-xl mb-2 transition-all duration-300 cursor-not-allowed opacity-50 ${
+                    isDarkMode
+                      ? 'text-gray-500'
+                      : 'text-gray-400'
+                  }`}
+                >
+                  <Lock className="h-5 w-5 flex-shrink-0" />
+                  <span className={`ml-3 transition-all duration-300 ${sidebarHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
+                    {item.name}
+                  </span>
+                </div>
               );
             }
             

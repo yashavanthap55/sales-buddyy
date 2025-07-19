@@ -23,7 +23,7 @@ const CompanySetupGuard: React.FC<CompanySetupGuardProps> = ({ children }) => {
         return;
       }
 
-      // Don't check for company setup on the company-setup page itself
+      // Allow access to company-setup page always
       if (location.pathname === '/company-setup') {
         setCheckingSetup(false);
         setHasCompanySetup(true);
@@ -39,16 +39,10 @@ const CompanySetupGuard: React.FC<CompanySetupGuardProps> = ({ children }) => {
 
         if (error) {
           console.error('Error fetching profile:', error);
-        } else if (!profile || !profile.company_name) {
-          // User hasn't completed company setup
           setHasCompanySetup(false);
-          toast({
-            title: "Company Setup Required",
-            description: "Fill the company setup form first",
-            variant: "destructive",
-          });
-          navigate('/company-setup');
-          return;
+        } else if (!profile || !profile.company_name) {
+          // User hasn't completed company setup - just set state, don't redirect
+          setHasCompanySetup(false);
         } else {
           setHasCompanySetup(true);
         }
@@ -73,9 +67,7 @@ const CompanySetupGuard: React.FC<CompanySetupGuardProps> = ({ children }) => {
     );
   }
 
-  if (!hasCompanySetup && location.pathname !== '/company-setup') {
-    return null; // Will redirect to company setup
-  }
+  // Always render children now - navigation locks will handle restrictions
 
   return <>{children}</>;
 };
