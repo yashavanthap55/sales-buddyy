@@ -109,22 +109,63 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
     }
   };
 
-  const handleSetupAnotherCompany = () => {
-    setFormData({
-      companyName: '',
-      email: '',
-      industry: '',
-      headquarters: '',
-      website: '',
-      linkedin_url: '',
-      acceptTerms: false,
-    });
-    setProducts([]);
-    setProductCount(0);
-    setExistingProfile(null);
-    setExistingProducts([]);
-    setIsEditing(false);
-    setSubmitted(false);
+  const handleDeleteCompany = async () => {
+    if (!user) return;
+
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete your company? This will remove all company data and products. This action cannot be undone.'
+    );
+
+    if (!confirmDelete) return;
+
+    setIsSubmitting(true);
+    try {
+      // Delete products first
+      const { error: productsError } = await supabase
+        .from('products')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (productsError) throw productsError;
+
+      // Clear company data from profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          company_name: null,
+          industry: null,
+          website: null,
+          headquarters: null,
+          linkedin_url: null,
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Reset form state
+      setFormData({
+        companyName: '',
+        email: '',
+        industry: '',
+        headquarters: '',
+        website: '',
+        linkedin_url: '',
+        acceptTerms: false,
+      });
+      setProducts([]);
+      setProductCount(0);
+      setExistingProfile(null);
+      setExistingProducts([]);
+      setIsEditing(false);
+      setSubmitted(false);
+
+      toast.success("Company data has been successfully deleted.");
+    } catch (error) {
+      console.error('Error deleting company:', error);
+      toast.error("Failed to delete company data. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -385,11 +426,12 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
-            onClick={handleSetupAnotherCompany}
-            className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            onClick={handleDeleteCompany}
+            disabled={isSubmitting}
+            className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl font-medium hover:from-red-700 hover:to-red-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:transform-none"
           >
             <Building className="h-5 w-5" />
-            Set Another Company
+            {isSubmitting ? 'Deleting...' : 'Delete Company & Start Over'}
           </button>
         </div>
       </div>
