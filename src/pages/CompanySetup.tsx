@@ -160,6 +160,11 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
       setSubmitted(false);
 
       toast.success("Company data has been successfully deleted.");
+      
+      // Force a small delay to ensure state updates propagate
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch (error) {
       console.error('Error deleting company:', error);
       toast.error("Failed to delete company data. Please try again.");
@@ -261,14 +266,13 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
       setIsEditing(false);
       toast.success('Company setup updated successfully!');
       
+      // Force immediate navigation without delay
       if (!existingProfile) {
-        setTimeout(() => {
-          if (onSetupComplete) {
-            onSetupComplete();
-          } else {
-            navigate('/', { replace: true });
-          }
-        }, 2000);
+        if (onSetupComplete) {
+          onSetupComplete();
+        } else {
+          navigate('/', { replace: true });
+        }
       }
     } catch (error) {
       console.error('Error during company setup:', error);

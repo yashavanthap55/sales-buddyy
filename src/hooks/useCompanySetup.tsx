@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -7,7 +7,7 @@ export const useCompanySetup = () => {
   const [hasCompanySetup, setHasCompanySetup] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const checkCompanySetup = async () => {
+  const checkCompanySetup = useCallback(async () => {
     if (!user) {
       setLoading(false);
       setHasCompanySetup(false);
@@ -25,7 +25,8 @@ export const useCompanySetup = () => {
         console.error('Error fetching profile:', error);
         setHasCompanySetup(false);
       } else {
-        setHasCompanySetup(!!(profile && profile.company_name));
+        const hasSetup = !!(profile && profile.company_name);
+        setHasCompanySetup(hasSetup);
       }
     } catch (error) {
       console.error('Error checking company setup:', error);
@@ -33,18 +34,18 @@ export const useCompanySetup = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     checkCompanySetup();
-  }, [user]);
+  }, [checkCompanySetup]);
 
   // Set up real-time subscription to profiles table
   useEffect(() => {
     if (!user) return;
 
     const subscription = supabase
-      .channel('profiles_changes')
+      .channel(`profile_changes_${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -53,16 +54,22 @@ export const useCompanySetup = () => {
           table: 'profiles',
           filter: `id=eq.${user.id}`,
         },
-        () => {
-          checkCompanySetup();
+        (payload) => {
+          console.log('Profile changed:', payload);
+          // Small delay to ensure database is updated
+          setTimeout(() => {
+            checkCompanySetup();
+          }, 100);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, [user]);
+  }, [user, checkCompanySetup]);
 
   return { hasCompanySetup, loading, refetch: checkCompanySetup };
 };
