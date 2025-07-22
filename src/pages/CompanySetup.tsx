@@ -200,6 +200,13 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
     console.log('Files uploaded:', files);
   };
 
+  const handleCSVParsed = (products: {name: string, description: string}[]) => {
+    setProducts(products);
+    setProductCount(products.length);
+    setShowManualEntry(true); // Show the parsed data in manual entry mode
+    toast.success(`Parsed ${products.length} products from CSV file`);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -266,13 +273,16 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
       setIsEditing(false);
       toast.success('Company setup updated successfully!');
       
-      // Force immediate navigation without delay
+      // Force immediate navigation without delay and trigger navigation update
       if (!existingProfile) {
-        if (onSetupComplete) {
-          onSetupComplete();
-        } else {
-          navigate('/', { replace: true });
-        }
+        // Force update of company setup status
+        setTimeout(() => {
+          if (onSetupComplete) {
+            onSetupComplete();
+          } else {
+            navigate('/', { replace: true });
+          }
+        }, 100);
       }
     } catch (error) {
       console.error('Error during company setup:', error);
@@ -602,7 +612,7 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
           
           <div className="mb-6">
             <label htmlFor="productCount" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Number of Products
+              Number of Products {products.length > 0 && `(${products.length} loaded from CSV)`}
             </label>
             <input
               type="number"
@@ -706,11 +716,13 @@ const CompanySetup: React.FC<CompanySetupProps> = ({ onSetupComplete }) => {
                     : 'border-gray-300 bg-gray-50'
                 }`}>
                   <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Upload product files (catalogs, specifications, etc.)
+                    Upload CSV file with product data or other product files
                   </p>
                   <ModernFileUpload 
                     onFilesUpload={handleFilesUpload}
+                    onCSVParsed={handleCSVParsed}
                     maxFiles={productCount}
+                    acceptedTypes={['.csv', 'text/csv']}
                   />
                 </div>
               )}

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Upload, File, X, Check } from 'lucide-react';
 
@@ -11,17 +10,51 @@ interface UploadedFile {
 
 interface ModernFileUploadProps {
   onFilesUpload?: (files: File[]) => void;
+  onCSVParsed?: (products: { name: string; description: string }[]) => void;
   maxFiles?: number;
   acceptedTypes?: string[];
 }
 
 const ModernFileUpload: React.FC<ModernFileUploadProps> = ({ 
   onFilesUpload, 
+  onCSVParsed,
   maxFiles = 5,
   acceptedTypes = []
 }) => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  const parseCSV = useCallback((file: File) => {
+    if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        const lines = text.split('\n');
+        const products: { name: string; description: string }[] = [];
+        
+        // Skip header row if it exists
+        const startIndex = lines[0]?.toLowerCase().includes('name') ? 1 : 0;
+        
+        for (let i = startIndex; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (line) {
+            const columns = line.split(',').map(col => col.trim().replace(/"/g, ''));
+            if (columns.length >= 1 && columns[0]) {
+              products.push({
+                name: columns[0],
+                description: columns[1] || ''
+              });
+            }
+          }
+        }
+        
+        if (products.length > 0 && onCSVParsed) {
+          onCSVParsed(products);
+        }
+      };
+      reader.readAsText(file);
+    }
+  }, [onCSVParsed]);
 
   const simulateUpload = useCallback((file: File) => {
     const fileId = Math.random().toString(36).substr(2, 9);
@@ -33,6 +66,9 @@ const ModernFileUpload: React.FC<ModernFileUploadProps> = ({
     };
 
     setUploadedFiles(prev => [...prev, newFile]);
+
+    // Parse CSV if it's a CSV file
+    parseCSV(file);
 
     // Simulate upload progress
     const interval = setInterval(() => {
@@ -57,7 +93,7 @@ const ModernFileUpload: React.FC<ModernFileUploadProps> = ({
         prev.map(f => f.id === fileId ? { ...f, progress: 100, status: 'completed' } : f)
       );
     }, 2000);
-  }, []);
+  }, [parseCSV]);
 
   const handleFileSelect = useCallback((files: FileList | null) => {
     if (!files) return;
@@ -138,7 +174,7 @@ const ModernFileUpload: React.FC<ModernFileUploadProps> = ({
               Drag and drop files here, or click to browse
             </p>
             <p className="text-sm text-gray-500 mt-1">
-              All file types supported • Max {maxFiles} files
+              {acceptedTypes.length > 0 ? `Accepted: ${acceptedTypes.join(', ')}` : 'All file types supported'} • Max {maxFiles} files
             </p>
           </div>
         </div>
